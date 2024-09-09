@@ -5,7 +5,7 @@ Implementation of the autodifferentiation Functions for Tensor.
 from __future__ import annotations
 
 import random
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Iterable
 
 import numpy as np
 
@@ -99,51 +99,74 @@ class Add(Function):
 class Mul(Function):
     @staticmethod
     def forward(ctx: Context, a: Tensor, b: Tensor) -> Tensor:
-        raise NotImplementedError("Need to include this file from past assignment.")
+        # TODO: Implement for Task 2.3.
+        ctx.save_for_backward(a, b)
+        return a.f.mul_zip(a, b)
 
     @staticmethod
     def backward(ctx: Context, grad_output: Tensor) -> Tuple[Tensor, Tensor]:
-        raise NotImplementedError("Need to include this file from past assignment.")
+        # TODO: Implement for Task 2.4.
+        a, b = ctx.saved_tensors
+        return grad_output.f.mul_zip(grad_output, b), grad_output.f.mul_zip(grad_output, a)
 
 
 class Sigmoid(Function):
     @staticmethod
     def forward(ctx: Context, t1: Tensor) -> Tensor:
-        raise NotImplementedError("Need to include this file from past assignment.")
+        # TODO: Implement for Task 2.3.
+        out = t1.f.sigmoid_map(t1)
+        ctx.save_for_backward(out)
+        return out
 
     @staticmethod
     def backward(ctx: Context, grad_output: Tensor) -> Tensor:
-        raise NotImplementedError("Need to include this file from past assignment.")
+        # TODO: Implement for Task 2.4.
+        (sigmoid_val,) = ctx.saved_tensors
+        one_minus_sigmoid_val = grad_output.f.add_zip(tensor([1], grad_output.backend), grad_output.f.neg_map(sigmoid_val))
+        return grad_output.f.mul_zip(grad_output.f.mul_zip(sigmoid_val, one_minus_sigmoid_val), grad_output)
 
 
 class ReLU(Function):
     @staticmethod
     def forward(ctx: Context, t1: Tensor) -> Tensor:
-        raise NotImplementedError("Need to include this file from past assignment.")
+        # TODO: Implement for Task 2.3.
+        ctx.save_for_backward(t1)
+        return t1.f.relu_map(t1)
 
     @staticmethod
     def backward(ctx: Context, grad_output: Tensor) -> Tensor:
-        raise NotImplementedError("Need to include this file from past assignment.")
+        # TODO: Implement for Task 2.4.
+        (t1,) = ctx.saved_tensors
+        return grad_output.f.relu_back_zip(t1, grad_output)
 
 
 class Log(Function):
     @staticmethod
     def forward(ctx: Context, t1: Tensor) -> Tensor:
-        raise NotImplementedError("Need to include this file from past assignment.")
+        # TODO: Implement for Task 2.3.
+        ctx.save_for_backward(t1)
+        return t1.f.log_map(t1)
 
     @staticmethod
     def backward(ctx: Context, grad_output: Tensor) -> Tensor:
-        raise NotImplementedError("Need to include this file from past assignment.")
+        # TODO: Implement for Task 2.4.
+        (t1,) = ctx.saved_tensors
+        return grad_output.f.log_back_zip(t1, grad_output)
 
 
 class Exp(Function):
     @staticmethod
     def forward(ctx: Context, t1: Tensor) -> Tensor:
-        raise NotImplementedError("Need to include this file from past assignment.")
+        # TODO: Implement for Task 2.3.
+        out = t1.f.exp_map(t1)
+        ctx.save_for_backward(out)
+        return out
 
     @staticmethod
     def backward(ctx: Context, grad_output: Tensor) -> Tensor:
-        raise NotImplementedError("Need to include this file from past assignment.")
+        # TODO: Implement for Task 2.4.
+        (exp_t1,) = ctx.saved_tensors
+        return grad_output.f.mul_zip(exp_t1, grad_output)
 
 
 class Sum(Function):
@@ -170,37 +193,52 @@ class All(Function):
 class LT(Function):
     @staticmethod
     def forward(ctx: Context, a: Tensor, b: Tensor) -> Tensor:
-        raise NotImplementedError("Need to include this file from past assignment.")
+        # TODO: Implement for Task 2.3.
+        ctx.save_for_backward(a.shape, b.shape)
+        return a.f.lt_zip(a, b)
 
     @staticmethod
     def backward(ctx: Context, grad_output: Tensor) -> Tuple[Tensor, Tensor]:
-        raise NotImplementedError("Need to include this file from past assignment.")
+        # TODO: Implement for Task 2.4.
+        a_shape, b_shape = ctx.saved_tensors
+        return zeros(a_shape, grad_output.backend), zeros(b_shape, grad_output.backend)
 
 
 class EQ(Function):
     @staticmethod
     def forward(ctx: Context, a: Tensor, b: Tensor) -> Tensor:
-        raise NotImplementedError("Need to include this file from past assignment.")
+        # TODO: Implement for Task 2.3.
+        ctx.save_for_backward(a.shape, b.shape)
+        return a.f.eq_zip(a, b)
 
     @staticmethod
     def backward(ctx: Context, grad_output: Tensor) -> Tuple[Tensor, Tensor]:
-        raise NotImplementedError("Need to include this file from past assignment.")
+        # TODO: Implement for Task 2.4.
+        a_shape, b_shape = ctx.saved_tensors
+        return zeros(a_shape, grad_output.backend), zeros(b_shape, grad_output.backend)
 
 
 class IsClose(Function):
     @staticmethod
     def forward(ctx: Context, a: Tensor, b: Tensor) -> Tensor:
-        raise NotImplementedError("Need to include this file from past assignment.")
+        # TODO: Implement for Task 2.3.
+        return a.f.is_close_zip(a, b)
 
 
 class Permute(Function):
     @staticmethod
     def forward(ctx: Context, a: Tensor, order: Tensor) -> Tensor:
-        raise NotImplementedError("Need to include this file from past assignment.")
+        # TODO: Implement for Task 2.3.
+        order2 = [int(order[i]) for i in range(order.size)]
+        ctx.save_for_backward(a._tensor)
+        tensor_data = a._tensor.permute(*order2)
+        return a._new(tensor_data)
 
     @staticmethod
     def backward(ctx: Context, grad_output: Tensor) -> Tuple[Tensor, float]:
-        raise NotImplementedError("Need to include this file from past assignment.")
+        # TODO: Implement for Task 2.4.
+        (a_tensor,) = ctx.saved_tensors
+        return minitorch.Tensor.make(grad_output._tensor._storage, a_tensor.shape, a_tensor.strides, backend=grad_output.backend), 0.0
 
 
 class View(Function):
@@ -345,7 +383,10 @@ def tensor(
             return [ls]
 
     cur = flatten(ls)
-    shape2 = shape(ls)
+    if isinstance(ls, Iterable):
+        shape2 = shape(ls)
+    else:
+        shape2 = [1]
     return _tensor(cur, tuple(shape2), backend=backend, requires_grad=requires_grad)
 
 

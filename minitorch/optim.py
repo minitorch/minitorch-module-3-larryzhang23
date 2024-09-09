@@ -1,6 +1,7 @@
 from typing import Sequence
 
 from .module import Parameter
+from .scalar import Scalar
 
 
 class Optimizer:
@@ -20,7 +21,7 @@ class SGD(Optimizer):
             if hasattr(p.value, "derivative"):
                 if p.value.derivative is not None:
                     p.value.derivative = None
-            if hasattr(p.value, "grad"):
+            elif hasattr(p.value, "grad"):
                 if p.value.grad is not None:
                     p.value.grad = None
 
