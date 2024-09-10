@@ -341,15 +341,15 @@ def _tensor_matrix_multiply(
         broadcast_index(out_index[:-2], out_shape[:-2], b_shape[:-2], b_index[:-2])
 
         row_idx, col_idx = out_index[-2:]
+        a_index[-2] = row_idx 
+        b_index[-1] = col_idx
+
         sums = 0.0
         for idx in range(zip_shape):
-            
-            a_index[-2] = row_idx
             a_index[-1] = idx
             a_pos = index_to_position(a_index, a_strides)
 
             b_index[-2] = idx
-            b_index[-1] = col_idx 
             b_pos = index_to_position(b_index, b_strides)
             sums += a_storage[a_pos] * b_storage[b_pos]
         out[out_pos] = sums
