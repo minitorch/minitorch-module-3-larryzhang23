@@ -330,7 +330,30 @@ def _tensor_matrix_multiply(
     b_batch_stride = b_strides[0] if b_shape[0] > 1 else 0
 
     # TODO: Implement for Task 3.2.
-    raise NotImplementedError("Need to implement for Task 3.2")
+    zip_shape = a_shape[-1]
+    for out_pos in prange(len(out)):
+        out_index = np.copy(out_shape)
+        a_index = np.copy(a_shape)
+        b_index = np.copy(b_shape)
+
+        to_index(out_pos, out_shape, out_index)
+        broadcast_index(out_index[:-2], out_shape[:-2], a_shape[:-2], a_index[:-2])
+        broadcast_index(out_index[:-2], out_shape[:-2], b_shape[:-2], b_index[:-2])
+
+        row_idx, col_idx = out_index[-2:]
+        sums = 0.0
+        for idx in range(zip_shape):
+            
+            a_index[-2] = row_idx
+            a_index[-1] = idx
+            a_pos = index_to_position(a_index, a_strides)
+
+            b_index[-2] = idx
+            b_index[-1] = col_idx 
+            b_pos = index_to_position(b_index, b_strides)
+            sums += a_storage[a_pos] * b_storage[b_pos]
+        out[out_pos] = sums
+    
 
 
 tensor_matrix_multiply = njit(parallel=True, fastmath=True)(_tensor_matrix_multiply)
