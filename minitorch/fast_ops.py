@@ -160,7 +160,21 @@ def tensor_map(
         in_strides: Strides,
     ) -> None:
         # TODO: Implement for Task 3.1.
-        raise NotImplementedError("Need to implement for Task 3.1")
+        # check if the strides are aligned
+        # if np.allclose(out_strides, in_strides):
+        #     for i in prange(len(out)):
+        #         out[i] = fn(in_storage[i])
+        # else:
+        for i in prange(len(out)):
+            # This is to create the out_index
+            out_index = np.copy(out_shape)
+            in_index = np.copy(in_shape)
+            to_index(i, out_shape, out_index)
+            broadcast_index(out_index, out_shape, in_shape, in_index)
+            # Find the correct position in in_storage
+            in_storage_idx = index_to_position(in_index, in_strides)
+            # Find the correct position in out_storage
+            out[i] = fn(in_storage[in_storage_idx])
 
     return njit(parallel=True)(_map)  # type: ignore
 
@@ -199,7 +213,24 @@ def tensor_zip(
         b_strides: Strides,
     ) -> None:
         # TODO: Implement for Task 3.1.
-        raise NotImplementedError("Need to implement for Task 3.1")
+        # if out_strides == a_strides == b_strides:
+        #     for i in prange(len(out)):
+        #         out[i] = fn(a_storage[i], b_storage[i])
+        # else:
+        for i in prange(len(out)):
+            out_index = np.copy(out_shape)
+            a_in_index = np.copy(a_shape)
+            b_in_index = np.copy(b_shape)
+            # This is to create the out_index
+            to_index(i, out_shape, out_index)
+            broadcast_index(out_index, out_shape, a_shape, a_in_index)
+            broadcast_index(out_index, out_shape, b_shape, b_in_index)
+            # Find the correct position in in_storage
+            a_in_storage_idx = index_to_position(a_in_index, a_strides)
+            b_in_storage_idx = index_to_position(b_in_index, b_strides)
+            val = fn(a_storage[a_in_storage_idx], b_storage[b_in_storage_idx])
+            # Find the correct position in out_storage
+            out[i] = val
 
     return njit(parallel=True)(_zip)  # type: ignore
 
@@ -233,7 +264,20 @@ def tensor_reduce(
         reduce_dim: int,
     ) -> None:
         # TODO: Implement for Task 3.1.
-        raise NotImplementedError("Need to implement for Task 3.1")
+        for i in prange(len(out)):
+            out_index = np.copy(out_shape)
+            to_index(i, out_shape, out_index)
+            out_index[reduce_dim] = 0
+            a_position = index_to_position(out_index, a_strides)
+            val = a_storage[a_position]
+
+            for k in prange(1, a_shape[reduce_dim]):
+                tmp_index = np.copy(out_index)
+                tmp_index[reduce_dim] = k
+                a_position = index_to_position(tmp_index, a_strides)
+                val = fn(val, a_storage[a_position])
+            out[i] = val
+
 
     return njit(parallel=True)(_reduce)  # type: ignore
 

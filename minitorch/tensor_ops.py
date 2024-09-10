@@ -380,19 +380,18 @@ def tensor_reduce(fn: Callable[[float, float], float]) -> Any:
         # TODO: Implement for Task 2.3.
         # create buffer
         out_index = np.array(out_shape)
-        a_index = np.array(a_shape)
-        # set the dtype to np.float64 is very important
-        group_data = np.array([0] * a_shape[reduce_dim], dtype=np.float64)
+
         for i in range(len(out)):
             to_index(i, out_shape, out_index)
-            # build a index by concatenating the dimension before and after reduce_dim
-            a_index[:reduce_dim] = out_index[:reduce_dim]
-            a_index[reduce_dim + 1:] = out_index[reduce_dim + 1:]
-            for k in range(a_shape[reduce_dim]):
-                a_index[reduce_dim] = k 
-                a_position = index_to_position(a_index, a_strides)
-                group_data[k] = a_storage[a_position]
-            out[i] = operators.reduce(fn, group_data)
+            out_index[reduce_dim] = 0
+            a_position = index_to_position(out_index, a_strides)
+            val = a_storage[a_position]
+
+            for k in range(1, a_shape[reduce_dim]):
+                out_index[reduce_dim] = k
+                a_position = index_to_position(out_index, a_strides)
+                val = fn(val, a_storage[a_position])
+            out[i] = val
 
     return _reduce
 

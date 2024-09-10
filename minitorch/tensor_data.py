@@ -44,7 +44,7 @@ def index_to_position(index: Index, strides: Strides) -> int:
     """
 
     # TODO: Implement for Task 2.1.
-    return sum(i * j for i, j in zip(index, strides))
+    return sum([i * j for i, j in zip(index, strides)])
 
 
 def to_index(ordinal: int, shape: Shape, out_index: OutIndex) -> None:
@@ -63,15 +63,16 @@ def to_index(ordinal: int, shape: Shape, out_index: OutIndex) -> None:
     # TODO: Implement for Task 2.1.
     alpha = 1
     strides = [1]
-    for shape_val in reversed(shape[1:]):
+    for shape_val in shape[1:][::-1]:
         alpha *= shape_val
         strides.append(alpha)
-    strides = reversed(strides)
+    strides = strides[::-1]
 
+    new_ordinal = ordinal
     for i, stride_val in enumerate(strides):
-        idx_val = ordinal // stride_val
+        idx_val = new_ordinal // stride_val
         out_index[i] = idx_val
-        ordinal = ordinal % stride_val
+        new_ordinal %= stride_val
     return out_index
 
 
