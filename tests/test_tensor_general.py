@@ -340,8 +340,8 @@ def test_permute(backend: str, data: DataObject) -> None:
 
 @pytest.mark.task3_2
 def test_mm2() -> None:
-    a = minitorch.rand((2, 3), backend=FastTensorBackend)
-    b = minitorch.rand((3, 4), backend=FastTensorBackend)
+    a = minitorch.rand((2, 3), backend=shared["fast"])
+    b = minitorch.rand((3, 4), backend=shared["fast"])
     c = a @ b
 
     c2 = (a.view(2, 3, 1) * b.view(1, 3, 4)).sum(1).view(2, 4)

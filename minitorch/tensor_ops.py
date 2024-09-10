@@ -12,6 +12,7 @@ from .tensor_data import (
     index_to_position,
     shape_broadcast,
     to_index,
+    strides_from_shape,
 )
 
 if TYPE_CHECKING:
@@ -222,7 +223,59 @@ class SimpleOps(TensorOps):
 
     @staticmethod
     def matrix_multiply(a: "Tensor", b: "Tensor") -> "Tensor":
-        raise NotImplementedError("Not implemented in this assignment")
+        """
+        Batched tensor matrix multiply ::
+
+            for n:
+              for i:
+                for j:
+                  for k:
+                    out[n, i, j] += a[n, i, k] * b[n, k, j]
+
+        Where n indicates an optional broadcasted batched dimension.
+
+        Should work for tensor shapes of 3 dims ::
+
+            assert a.shape[-1] == b.shape[-2]
+
+        Args:
+            a : tensor data a
+            b : tensor data b
+
+        Returns:
+            New tensor data
+        """
+
+        # Make these always be a 3 dimensional multiply
+        both_2d = 0
+        if len(a.shape) == 2:
+            a = a.contiguous().view(1, a.shape[0], a.shape[1])
+            both_2d += 1
+        if len(b.shape) == 2:
+            b = b.contiguous().view(1, b.shape[0], b.shape[1])
+            both_2d += 1
+        both_2d = both_2d == 2
+
+        ls = list(shape_broadcast(a.shape[:-2], b.shape[:-2]))
+        ls.append(a.shape[-2])
+        ls.append(b.shape[-1])
+        assert a.shape[-1] == b.shape[-2]
+
+        # use broadcast to finish matrix multiply, so need to add one more dimension
+        a = a.contiguous().view(*a.shape, 1)
+        b = b.contiguous().view(*b.shape[:-2], 1, b.shape[-2], b.shape[-1])
+        ls = ls[:-1] + [1, ls[-1]]
+        out = a.zeros(tuple(ls))
+
+        tensor_matrix_multiply(*out.tuple(), *a.tuple(), *b.tuple())
+
+        # remove the extra dimension
+        out = out.view(*out.shape[:-2], out.shape[-1])
+
+        # Undo 3d if we added it.
+        if both_2d:
+            out = out.view(out.shape[1], out.shape[2])
+        return out
 
     is_cuda = False
 
@@ -394,6 +447,48 @@ def tensor_reduce(fn: Callable[[float, float], float]) -> Any:
             out[i] = val
 
     return _reduce
+
+def tensor_matrix_multiply(
+    out: Storage,
+    out_shape: Shape,
+    out_strides: Strides,
+    a_storage: Storage,
+    a_shape: Shape,
+    a_strides: Strides,
+    b_storage: Storage,
+    b_shape: Shape,
+    b_strides: Strides,
+) -> None:
+    """
+    Tensor matrix multiply function.
+
+    Should work for any tensor shapes that broadcast as long as
+
+    ```
+    assert a_shape[-1] == b_shape[-2]
+    ```
+
+    Args:
+        out (Storage): storage for `out` tensor
+        out_shape (Shape): shape for `out` tensor
+        out_strides (Strides): strides for `out` tensor
+        a_storage (Storage): storage for `a` tensor
+        a_shape (Shape): shape for `a` tensor
+        a_strides (Strides): strides for `a` tensor
+        b_storage (Storage): storage for `b` tensor
+        b_shape (Shape): shape for `b` tensor
+        b_strides (Strides): strides for `b` tensor
+
+    Returns:
+        None : Fills in `out`
+    """
+
+    # TODO: Implement for Task 3.2.
+    middle_out_shape =list(out_shape[:-2]) + [a_shape[-2]] + [out_shape[-1]]
+    middle_out = np.zeros((int(operators.prod(middle_out_shape), )), dtype=np.float64)
+    middle_out_strides = strides_from_shape(middle_out_shape)
+    tensor_zip(operators.mul)(middle_out, np.array(middle_out_shape), np.array(middle_out_strides), a_storage, a_shape, a_strides, b_storage, b_shape, b_strides)
+    tensor_reduce(operators.add)(out, out_shape, out_strides, middle_out, middle_out_shape, middle_out_strides, -2)
 
 
 SimpleBackend = TensorBackend(SimpleOps)
