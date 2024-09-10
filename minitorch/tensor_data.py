@@ -62,12 +62,13 @@ def to_index(ordinal: int, shape: Shape, out_index: OutIndex) -> None:
     """
     # TODO: Implement for Task 2.1.
     alpha = 1
-    strides = [1]
-    for shape_val in shape[1:][::-1]:
-        alpha *= shape_val
-        strides.append(alpha)
-    strides = strides[::-1]
+    # Don't use list to add items dynamically because it is not supported by numba
+    strides = np.copy(shape)
+    for i in range(len(shape) - 1, -1, -1):
+        strides[i] = alpha 
+        alpha *= shape[i]
 
+    # Make sure to assign new variable because the function is made inline.
     new_ordinal = ordinal
     for i, stride_val in enumerate(strides):
         idx_val = new_ordinal // stride_val
