@@ -297,17 +297,14 @@ def tensor_reduce(
         pos = cuda.threadIdx.x
 
         # TODO: Implement for Task 3.3.
-        i = out_pos * cuda.blockDim.x + pos
-        block_start_i = out_pos * cuda.blockDim.x
-        to_index(block_start_i, out_shape, out_index)
-        out_index[reduce_dim] = a_shape[reduce_dim] - 1
-        max_idx = index_to_position(out_index, a_strides)
-        if i <= max_idx:
-            cache[pos] = a_storage[i]
+        max_pos_per_block = min(cuda.blockDim.x, a_shape[reduce_dim])
+        if pos < max_pos_per_block:
+            a_pos = out_pos * max_pos_per_block + pos
+            cache[pos] = a_storage[a_pos]
         else:
             cache[pos] = reduce_value
         cuda.syncthreads()
-        if i <= max_idx and pos == 0:
+        if pos == 0:
             result = reduce_value
             for idx in range(BLOCK_DIM):
                 result = fn(result, cache[idx])
