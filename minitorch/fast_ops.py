@@ -271,13 +271,11 @@ def tensor_reduce(
         for out_storage_idx in prange(len(out)):
             out_index = np.copy(out_shape)
             to_index(out_storage_idx, out_shape, out_index)
-            out_index[reduce_dim] = 0
             a_position = index_to_position(out_index, a_strides)
             val = a_storage[a_position]
 
-            for k in range(1, a_shape[reduce_dim]):
-                out_index[reduce_dim] = k
-                a_position = index_to_position(out_index, a_strides)
+            for _ in range(1, a_shape[reduce_dim]):
+                a_position += a_strides[reduce_dim]
                 val = fn(val, a_storage[a_position])
             out[out_storage_idx] = val
 
@@ -345,14 +343,14 @@ def _tensor_matrix_multiply(
         a_index[-1] = 0
         b_index[-2] = 0
         b_index[-1] = col_idx
-        a_pos_initial = index_to_position(a_index, a_strides)
-        b_pos_initial = index_to_position(b_index, b_strides)
+        a_pos = index_to_position(a_index, a_strides)
+        b_pos = index_to_position(b_index, b_strides)
 
         sums = 0.0
-        for idx in range(zip_shape):
-            a_pos = a_pos_initial + int(idx) * a_strides[-1]
-            b_pos = b_pos_initial + int(idx) * b_strides[-2]
+        for _ in range(zip_shape):
             sums += a_storage[a_pos] * b_storage[b_pos]
+            a_pos += a_strides[-1]
+            b_pos += b_strides[-2]
         out[out_pos] = sums
     
 
