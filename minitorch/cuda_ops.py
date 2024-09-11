@@ -158,7 +158,8 @@ def tensor_map(
             to_index(i, out_shape, out_index)
             broadcast_index(out_index, out_shape, in_shape, in_index)
             in_pos = index_to_position(in_index, in_strides)
-            out[i] = fn(in_storage[in_pos])
+            out_pos = index_to_position(i, out_strides)
+            out[out_pos] = fn(in_storage[in_pos])
 
     return cuda.jit()(_map)  # type: ignore
 
@@ -206,7 +207,8 @@ def tensor_zip(
             broadcast_index(out_index, out_shape, b_shape, b_index)
             a_pos = index_to_position(a_index, a_strides)
             b_pos = index_to_position(b_index, b_strides)
-            out[i] = fn(a_storage[a_pos], b_storage[b_pos])
+            out_pos = index_to_position(i, out_strides)
+            out[out_pos] = fn(a_storage[a_pos], b_storage[b_pos])
 
     return cuda.jit()(_zip)  # type: ignore
 
