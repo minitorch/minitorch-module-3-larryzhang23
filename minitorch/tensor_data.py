@@ -44,7 +44,13 @@ def index_to_position(index: Index, strides: Strides) -> int:
     """
 
     # TODO: Implement for Task 2.1.
-    return sum([i * j for i, j in zip(index, strides)])
+    # return sum([i * j for i, j in zip(index, strides)])
+    
+    # To allow it in cuda for task 3.3
+    sums = 0
+    for i, j in zip(index, strides):
+        sums += i * j
+    return sums
 
 
 def to_index(ordinal: int, shape: Shape, out_index: OutIndex) -> None:
@@ -62,15 +68,16 @@ def to_index(ordinal: int, shape: Shape, out_index: OutIndex) -> None:
     """
     # TODO: Implement for Task 2.1.
     alpha = 1
-    # Don't use list to add items dynamically because it is not supported by numba
-    strides = np.copy(shape)
+    # fix1 for task 3.2: Don't use list to add items dynamically because it is not supported by numba
+    # fix2 for task 3.3: Avoid extra memory allocation
+   
     for i in range(len(shape) - 1, -1, -1):
-        strides[i] = alpha 
+        out_index[i] = alpha 
         alpha *= shape[i]
 
     # Make sure to assign new variable because the function is made inline.
     new_ordinal = ordinal
-    for i, stride_val in enumerate(strides):
+    for i, stride_val in enumerate(out_index):
         idx_val = new_ordinal // stride_val
         out_index[i] = idx_val
         new_ordinal %= stride_val
