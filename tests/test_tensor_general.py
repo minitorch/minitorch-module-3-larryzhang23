@@ -182,6 +182,7 @@ if numba.cuda.is_available():
         s = b.sum(1)
         b2 = minitorch.tensor(x, backend=shared["cuda"])
         out = b2.sum(1)
+        print(s, out)
         for i in range(16):
             assert_close(s[i, 0], out[i, 0])
 
