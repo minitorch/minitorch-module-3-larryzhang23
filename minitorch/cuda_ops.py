@@ -302,8 +302,8 @@ def tensor_reduce(
         max_pos_per_block = min(cuda.blockDim.x, a_shape[reduce_dim])
         if pos < max_pos_per_block:
             a_pos = out_pos * max_pos_per_block + pos 
-            to_index(a_pos, a_shape, out_index)
-            a_pos_idx = index_to_position(out_index, a_strides)
+            to_index(a_pos, a_shape, out_index[:len(a_shape)])
+            a_pos_idx = index_to_position(out_index[:len(a_shape)], a_strides)
             cache[pos] = a_storage[a_pos_idx]
         else:
             cache[pos] = reduce_value
@@ -312,8 +312,8 @@ def tensor_reduce(
             result = reduce_value
             for idx in range(BLOCK_DIM):
                 result = fn(result, cache[idx])
-            to_index(out_pos, out_shape, out_index)
-            out_pos_idx = index_to_position(out_index, out_strides)
+            to_index(out_pos, out_shape, out_index[:len(a_shape)])
+            out_pos_idx = index_to_position(out_index[:len(a_shape)], out_strides)
             out[out_pos_idx] = result
 
     return cuda.jit()(_reduce)  # type: ignore
