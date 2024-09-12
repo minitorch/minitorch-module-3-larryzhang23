@@ -331,8 +331,9 @@ def tensor_map(fn: Callable[[float], float]) -> Any:
             broadcast_index(out_index, out_shape, in_shape, in_index)
             # Find the correct position in in_storage
             in_storage_idx = index_to_position(in_index, in_strides)
+            out_storage_idx = index_to_position(out_index, out_strides)
             # Find the correct position in out_storage
-            out[i] = fn(in_storage[in_storage_idx])
+            out[out_storage_idx] = fn(in_storage[in_storage_idx])
 
     return _map
 
@@ -393,9 +394,10 @@ def tensor_zip(fn: Callable[[float, float], float]) -> Any:
             # Find the correct position in in_storage
             a_in_storage_idx = index_to_position(a_in_index, a_strides)
             b_in_storage_idx = index_to_position(b_in_index, b_strides)
+            out_storage_idx = index_to_position(out_index, out_strides)
             val = fn(a_storage[a_in_storage_idx], b_storage[b_in_storage_idx])
             # Find the correct position in out_storage
-            out[i] = val
+            out[out_storage_idx] = val
 
     return _zip
 
@@ -436,7 +438,7 @@ def tensor_reduce(fn: Callable[[float, float], float]) -> Any:
 
         for i in range(len(out)):
             to_index(i, out_shape, out_index)
-            out_index[reduce_dim] = 0
+            out_pos = index_to_position(out_index, out_strides)
             a_position = index_to_position(out_index, a_strides)
             val = a_storage[a_position]
 
@@ -444,7 +446,8 @@ def tensor_reduce(fn: Callable[[float, float], float]) -> Any:
                 out_index[reduce_dim] = k
                 a_position = index_to_position(out_index, a_strides)
                 val = fn(val, a_storage[a_position])
-            out[i] = val
+            
+            out[out_pos] = val
 
     return _reduce
 

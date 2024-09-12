@@ -169,15 +169,16 @@ def tensor_map(
                 out[i] = fn(in_storage[i])
         else:
         # The out_storage_idx was named i which conflicts with the inline function to_index
-            for out_storage_idx in prange(len(out)):
+            for j in prange(len(out)):
                 # This is to create the out_index
-                out_index = np.copy(out_shape)
-                in_index = np.copy(in_shape)
-                to_index(out_storage_idx, out_shape, out_index)
+                out_index = np.zeros_like(out_shape)
+                in_index = np.zeros_like(in_shape)
+                to_index(j, out_shape, out_index)
                 broadcast_index(out_index, out_shape, in_shape, in_index)
                 # Find the correct position in in_storage
                 in_storage_idx = index_to_position(in_index, in_strides)
                 # Find the correct position in out_storage
+                out_storage_idx = index_to_position(out_index, out_strides)
                 out[out_storage_idx] = fn(in_storage[in_storage_idx])
 
     return njit(parallel=True)(_map)  # type: ignore
@@ -221,12 +222,12 @@ def tensor_zip(
             for i in prange(len(out)):
                 out[i] = fn(a_storage[i], b_storage[i])
         else:
-            for out_storage_idx in prange(len(out)):
-                out_index = np.copy(out_shape)
-                a_in_index = np.copy(a_shape)
-                b_in_index = np.copy(b_shape)
+            for j in prange(len(out)):
+                out_index = np.zeros_like(out_shape)
+                a_in_index = np.zeros_like(a_shape)
+                b_in_index = np.zeros_like(b_shape)
                 # This is to create the out_index
-                to_index(out_storage_idx, out_shape, out_index)
+                to_index(j, out_shape, out_index)
                 broadcast_index(out_index, out_shape, a_shape, a_in_index)
                 broadcast_index(out_index, out_shape, b_shape, b_in_index)
                 # Find the correct position in in_storage
@@ -234,6 +235,7 @@ def tensor_zip(
                 b_in_storage_idx = index_to_position(b_in_index, b_strides)
                 val = fn(a_storage[a_in_storage_idx], b_storage[b_in_storage_idx])
                 # Find the correct position in out_storage
+                out_storage_idx = index_to_position(out_index, out_strides)
                 out[out_storage_idx] = val
 
     return njit(parallel=True)(_zip)  # type: ignore
@@ -269,7 +271,7 @@ def tensor_reduce(
     ) -> None:
         # TODO: Implement for Task 3.1.
         for out_storage_idx in prange(len(out)):
-            out_index = np.copy(out_shape)
+            out_index = np.zeros_like(out_shape)
             to_index(out_storage_idx, out_shape, out_index)
             a_position = index_to_position(out_index, a_strides)
             val = a_storage[a_position]

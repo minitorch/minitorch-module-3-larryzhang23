@@ -47,9 +47,10 @@ def index_to_position(index: Index, strides: Strides) -> int:
     # return sum([i * j for i, j in zip(index, strides)])
     
     # To allow it in cuda for task 3.3
+    min_dim = min(len(index), len(strides))
     sums = 0
-    for i, j in zip(index, strides):
-        sums += i * j
+    for i in range(min_dim):
+        sums += index[i] * strides[i]
     return sums
 
 
@@ -109,12 +110,21 @@ def broadcast_index(
     # When we loop over the output tensor, use the function to map the index back to input to get the value.
     ################################################################################################################
     # if there is more dimensions in big_index on the left, abandoned by using -len(shape):
-    for i, (idx, shape_val) in enumerate(zip(big_index[-len(shape):], shape)):
+    # for i, (idx, shape_val) in enumerate(zip(big_index[-len(shape):], shape)):
+    #     # if the ith dimension of shape is 1, the index has to be 0 whether the big_index is 0 or not and no matter what ith dimension of the big_shape is
+    #     if shape_val == 1:
+    #         out_index[i] = 0 
+    #     else:
+    #         out_index[i] = idx
+
+    # To let cuda work
+    valid_index = big_index[-len(shape):]
+    for i, shape_val in enumerate(shape):
         # if the ith dimension of shape is 1, the index has to be 0 whether the big_index is 0 or not and no matter what ith dimension of the big_shape is
         if shape_val == 1:
             out_index[i] = 0 
         else:
-            out_index[i] = idx
+            out_index[i] = valid_index[i]
 
 
 def shape_broadcast(shape1: UserShape, shape2: UserShape) -> UserShape:
