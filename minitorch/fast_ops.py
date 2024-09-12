@@ -338,6 +338,7 @@ def _tensor_matrix_multiply(
         b_index = np.copy(b_shape)
 
         to_index(out_pos, out_shape, out_index)
+        out_pos_idx = index_to_position(out_index, out_strides)
         broadcast_index(out_index[:-2], out_shape[:-2], a_shape[:-2], a_index[:-2])
         broadcast_index(out_index[:-2], out_shape[:-2], b_shape[:-2], b_index[:-2])
 
@@ -354,7 +355,7 @@ def _tensor_matrix_multiply(
             sums += a_storage[a_pos] * b_storage[b_pos]
             a_pos += a_strides[-1]
             b_pos += b_strides[-2]
-        out[out_pos] = sums
+        out[out_pos_idx] = sums
     
 
 
