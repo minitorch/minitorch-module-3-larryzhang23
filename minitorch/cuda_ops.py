@@ -301,8 +301,8 @@ def tensor_reduce(
         # TODO: Implement for Task 3.3.
         max_pos_per_block = min(BLOCK_DIM, a_shape[reduce_dim])
         if pos < max_pos_per_block:
-            a_pos = out_pos * max_pos_per_block + pos 
-            to_index(a_pos, a_shape, out_index[:len(a_shape)])
+            to_index(out_pos, a_shape, out_index[:len(a_shape)])
+            out_index[reduce_dim] = pos
             a_pos_idx = index_to_position(out_index[:len(a_shape)], a_strides)
             cache[pos] = a_storage[a_pos_idx]
         cuda.syncthreads()
