@@ -63,8 +63,9 @@ def test_one_args(
     t1 = data.draw(tensors(backend=shared[backend]))
     name, base_fn, tensor_fn = fn
     t2 = tensor_fn(t1)
-    print(t1, t2)
+    print(f"input: {t1}")
     for ind in t2._tensor.indices():
+        print(f"cuda: {t2[ind]}, scalar: {t1[ind]}")
         assert_close(t2[ind], base_fn(t1[ind]))
 
 
