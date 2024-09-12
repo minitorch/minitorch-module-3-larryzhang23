@@ -156,7 +156,7 @@ def tensor_map(
         # TODO: Implement for Task 3.3.
         if thread_id < out_size:
             to_index(thread_id, out_shape, out_index)
-            broadcast_index(out_index, out_shape, in_shape, in_index)
+            broadcast_index(out_index[:len(out_shape)], out_shape, in_shape, in_index)
             in_pos = index_to_position(in_index, in_strides)
             out_pos = index_to_position(out_index, out_strides)
             out[out_pos] = fn(in_storage[in_pos])
