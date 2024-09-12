@@ -301,17 +301,16 @@ def tensor_reduce(
         # TODO: Implement for Task 3.3.
         max_pos_per_block = min(BLOCK_DIM, a_shape[reduce_dim])
         if pos < max_pos_per_block:
-            to_index(out_pos, a_shape, out_index[:len(a_shape)])
+            to_index(out_pos, out_shape, out_index[:len(out_shape)])
+            out_pos_idx = index_to_position(out_index[:len(a_shape)], out_strides)
             out_index[reduce_dim] = pos
-            a_pos_idx = index_to_position(out_index[:len(a_shape)], a_strides)
+            a_pos_idx = index_to_position(out_index[:len(out_shape)], a_strides)
             cache[pos] = a_storage[a_pos_idx]
         cuda.syncthreads()
         if pos == 0:
             result = reduce_value
             for idx in range(max_pos_per_block):
                 result = fn(result, cache[idx])
-            to_index(out_pos, out_shape, out_index[:len(a_shape)])
-            out_pos_idx = index_to_position(out_index[:len(a_shape)], out_strides)
             out[out_pos_idx] = result
 
     return cuda.jit()(_reduce)  # type: ignore
