@@ -47,9 +47,8 @@ def index_to_position(index: Index, strides: Strides) -> int:
     # return sum([i * j for i, j in zip(index, strides)])
     
     # To allow it in cuda for task 3.3
-    min_dim = min(len(index), len(strides))
     sums = 0
-    for i in range(min_dim):
+    for i in range(len(strides)):
         sums += index[i] * strides[i]
     return sums
 
@@ -119,7 +118,7 @@ def broadcast_index(
     #         out_index[i] = idx
 
     # To let cuda work
-    valid_index = big_index[-len(shape):]
+    valid_index = big_index[len(big_shape) - len(shape):]
     for i, shape_val in enumerate(shape):
         # if the ith dimension of shape is 1, the index has to be 0 whether the big_index is 0 or not and no matter what ith dimension of the big_shape is
         if shape_val == 1:
