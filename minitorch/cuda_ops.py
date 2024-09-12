@@ -150,8 +150,8 @@ def tensor_map(
         in_strides: Strides,
     ) -> None:
 
-        out_index = cuda.local.array(len(out_shape), numba.int32)
-        in_index = cuda.local.array(len(in_shape), numba.int32)
+        out_index = cuda.local.array(int(len(out_shape)), numba.int32)
+        in_index = cuda.local.array(int(len(in_shape)), numba.int32)
         thread_id = cuda.blockIdx.x * cuda.blockDim.x + cuda.threadIdx.x
         # TODO: Implement for Task 3.3.
         if thread_id < out_size:
