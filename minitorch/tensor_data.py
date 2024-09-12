@@ -78,7 +78,8 @@ def to_index(ordinal: int, shape: Shape, out_index: OutIndex) -> None:
 
     # Make sure to assign new variable because the function is made inline.
     new_ordinal = ordinal
-    for i, stride_val in enumerate(out_index):
+    for i in range(len(shape)):
+        stride_val = out_index[i]
         idx_val = new_ordinal // stride_val
         out_index[i] = idx_val
         new_ordinal %= stride_val
