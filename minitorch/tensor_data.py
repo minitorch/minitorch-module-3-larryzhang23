@@ -118,7 +118,7 @@ def broadcast_index(
     #         out_index[i] = idx
 
     # To let cuda work
-    valid_index = big_index[len(big_shape) - len(shape):]
+    valid_index = big_index[-len(shape):]
     for i, shape_val in enumerate(shape):
         # if the ith dimension of shape is 1, the index has to be 0 whether the big_index is 0 or not and no matter what ith dimension of the big_shape is
         if shape_val == 1:
