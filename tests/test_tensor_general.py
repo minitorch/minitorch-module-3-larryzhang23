@@ -65,7 +65,7 @@ def test_one_args(
     t2 = tensor_fn(t1)
     print(f"input: {t1}")
     for ind in t2._tensor.indices():
-        print(f"cuda: {t2[ind]}, scalar: {t1[ind]}")
+        print(f"cuda: {t2[ind]}, scalar: {base_fn(t1[ind])}")
         assert_close(t2[ind], base_fn(t1[ind]))
 
 
