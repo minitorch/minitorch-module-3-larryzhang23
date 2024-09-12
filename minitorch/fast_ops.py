@@ -270,9 +270,10 @@ def tensor_reduce(
         reduce_dim: int,
     ) -> None:
         # TODO: Implement for Task 3.1.
-        for out_storage_idx in prange(len(out)):
+        for j in prange(len(out)):
             out_index = np.zeros_like(out_shape)
-            to_index(out_storage_idx, out_shape, out_index)
+            to_index(j, out_shape, out_index)
+            out_storage_idx = index_to_position(out_index, out_strides)
             a_position = index_to_position(out_index, a_strides)
             val = a_storage[a_position]
 

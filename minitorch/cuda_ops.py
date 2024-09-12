@@ -158,7 +158,7 @@ def tensor_map(
             to_index(i, out_shape, out_index)
             broadcast_index(out_index, out_shape, in_shape, in_index)
             in_pos = index_to_position(in_index, in_strides)
-            out_pos = index_to_position(i, out_strides)
+            out_pos = index_to_position(out_index, out_strides)
             out[out_pos] = fn(in_storage[in_pos])
 
     return cuda.jit()(_map)  # type: ignore
@@ -207,7 +207,7 @@ def tensor_zip(
             broadcast_index(out_index, out_shape, b_shape, b_index)
             a_pos = index_to_position(a_index, a_strides)
             b_pos = index_to_position(b_index, b_strides)
-            out_pos = index_to_position(i, out_strides)
+            out_pos = index_to_position(out_index, out_strides)
             out[out_pos] = fn(a_storage[a_pos], b_storage[b_pos])
 
     return cuda.jit()(_zip)  # type: ignore
@@ -301,8 +301,10 @@ def tensor_reduce(
         # TODO: Implement for Task 3.3.
         max_pos_per_block = min(cuda.blockDim.x, a_shape[reduce_dim])
         if pos < max_pos_per_block:
-            a_pos = out_pos * max_pos_per_block + pos
-            cache[pos] = a_storage[a_pos]
+            a_pos = out_pos * max_pos_per_block + pos 
+            to_index(a_pos, a_shape, out_index)
+            a_pos_idx = index_to_position(out_index, a_strides)
+            cache[pos] = a_storage[a_pos_idx]
         else:
             cache[pos] = reduce_value
         cuda.syncthreads()
@@ -310,7 +312,9 @@ def tensor_reduce(
             result = reduce_value
             for idx in range(BLOCK_DIM):
                 result = fn(result, cache[idx])
-            out[out_pos] = result
+            to_index(out_pos, out_shape, out_index)
+            out_pos_idx = index_to_position(out_index, out_strides)
+            out[out_pos_idx] = result
 
     return cuda.jit()(_reduce)  # type: ignore
 
