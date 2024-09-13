@@ -435,6 +435,7 @@ def _tensor_matrix_multiply(
     # TODO: Implement for Task 3.4.
     # move to shared memory
     out_loops = (a_shape[2] + (BLOCK_DIM - 1)) // BLOCK_DIM
+    inner_loops = min(a_shape[2], BLOCK_DIM)
     sums = 0
     for out_loop_idx in range(out_loops):
         a_xidx = out_loop_idx * BLOCK_DIM + xidx
@@ -448,10 +449,10 @@ def _tensor_matrix_multiply(
         cuda.syncthreads()
         # compute
         if yidx < out_shape[1] and xidx < out_shape[2]:
-            for loop_idx in range(a_shape[2]):
+            for loop_idx in range(inner_loops):
                 sums += a_shared[pj, loop_idx] * b_shared[loop_idx, pi]
         cuda.syncthreads()
-    cuda.syncthreads()
+    
     if yidx < out_shape[1] and xidx < out_shape[2]:
         out_pos = index_to_position((batch, yidx, xidx), out_strides)
         out[out_pos] = sums 
