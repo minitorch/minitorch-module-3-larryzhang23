@@ -441,10 +441,10 @@ def _tensor_matrix_multiply(
         b_yidx = out_loop_idx * BLOCK_DIM + yidx
         if yidx < out_shape[1] and a_xidx < a_shape[2]:
             a_idx = index_to_position((batch, yidx, a_xidx), a_strides)
-            a_shared[pi, pj] = a_storage[a_idx]
+            a_shared[pj, pi] = a_storage[a_idx]
         if b_yidx < b_shape[1] and xidx < out_shape[2]:
             b_idx = index_to_position((batch, b_yidx, xidx), b_strides)
-            b_shared[pi, pj] = b_storage[b_idx]
+            b_shared[pj, pi] = b_storage[b_idx]
         cuda.syncthreads()
         # compute
         if yidx < out_shape[1] and xidx < out_shape[2]:
