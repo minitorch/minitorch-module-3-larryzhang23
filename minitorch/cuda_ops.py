@@ -155,10 +155,10 @@ def tensor_map(
         thread_id = cuda.blockIdx.x * cuda.blockDim.x + cuda.threadIdx.x
         # TODO: Implement for Task 3.3.
         if thread_id < out_size:
-            to_index(thread_id, out_shape, out_index[:len(out_shape)])
+            to_index(thread_id, out_shape, out_index)
             broadcast_index(out_index[:len(out_shape)], out_shape, in_shape, in_index[:len(in_shape)])
-            in_pos = index_to_position(in_index[:len(in_shape)], in_strides)
-            out_pos = index_to_position(out_index[:len(out_shape)], out_strides)
+            in_pos = index_to_position(in_index, in_strides)
+            out_pos = index_to_position(out_index, out_strides)
             out[out_pos] = fn(in_storage[in_pos])
 
     return cuda.jit()(_map)  # type: ignore

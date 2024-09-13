@@ -82,7 +82,6 @@ def to_index(ordinal: int, shape: Shape, out_index: OutIndex) -> None:
         idx_val = new_ordinal // stride_val
         out_index[i] = idx_val
         new_ordinal %= stride_val
-    return out_index
 
 
 def broadcast_index(
