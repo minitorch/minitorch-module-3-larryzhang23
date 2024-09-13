@@ -13,8 +13,8 @@ if numba.cuda.is_available():
     GPUBackend = minitorch.TensorBackend(minitorch.CudaOps)
 
 if __name__ == "__main__":
-    PTS = 50
-    HIDDEN = 100
+    PTS = 500
+    HIDDEN = 1000
     data = datasets["Circle"](PTS)
     run_times = 10
     FastTrain(HIDDEN, backend=FastTensorBackend).train(data, 0.05, max_epochs=1)
