@@ -438,8 +438,8 @@ def _tensor_matrix_multiply(
     inner_loops = min(a_shape[2], BLOCK_DIM)
     sums = 0
     for out_loop_idx in range(out_loops):
-        a_xidx = out_loop_idx * BLOCK_DIM + xidx
-        b_yidx = out_loop_idx * BLOCK_DIM + yidx
+        a_xidx = out_loop_idx * BLOCK_DIM + pi
+        b_yidx = out_loop_idx * BLOCK_DIM + pj
         if yidx < out_shape[1] and a_xidx < a_shape[2]:
             a_idx = index_to_position((batch, yidx, a_xidx), a_strides)
             a_shared[pj, pi] = a_storage[a_idx]
