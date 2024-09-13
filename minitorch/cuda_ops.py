@@ -441,12 +441,14 @@ def _tensor_matrix_multiply(
         a_xidx = out_loop_idx * BLOCK_DIM + pi
         b_yidx = out_loop_idx * BLOCK_DIM + pj
         if yidx < out_shape[1] and a_xidx < a_shape[2]:
-            a_idx = index_to_position((batch, yidx, a_xidx), a_strides)
+            # use a_batch_stride to mask out the batch if a's batch is one
+            a_idx = index_to_position((batch, yidx, a_xidx), (a_batch_stride, a_strides[1], a_strides[2]))
             a_shared[pj, pi] = a_storage[a_idx]
         else:
             a_shared[pj, pi] = 0.0
         if b_yidx < b_shape[1] and xidx < out_shape[2]:
-            b_idx = index_to_position((batch, b_yidx, xidx), b_strides)
+            # use b_batch_stride to mask out the batch if b's batch is one
+            b_idx = index_to_position((batch, b_yidx, xidx), (b_batch_stride, b_strides[1], b_strides[2]))
             b_shared[pj, pi] = b_storage[b_idx]
         else:
             b_shared[pj, pi] = 0.0
