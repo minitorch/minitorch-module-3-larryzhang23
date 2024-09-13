@@ -361,7 +361,7 @@ def _mm_practice(out: Storage, a: Storage, b: Storage, size: int) -> None:
     if xidx < size and yidx < size:
         sums = 0
         for i in range(size):
-            sums += a_shared[i, xidx] * b_shared[yidx, i]
+            sums += a_shared[yidx, i] * b_shared[i, xidx]
         out_pos = yidx * size + xidx
         out[out_pos] = sums
     
