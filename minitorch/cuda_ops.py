@@ -202,12 +202,12 @@ def tensor_zip(
 
         # TODO: Implement for Task 3.3.
         if thread_id < out_size:
-            to_index(thread_id, out_shape, out_index[:len(out_shape)])
+            to_index(thread_id, out_shape, out_index)
             broadcast_index(out_index[:len(out_shape)], out_shape, a_shape, a_index[:len(a_shape)])
             broadcast_index(out_index[:len(out_shape)], out_shape, b_shape, b_index[:len(b_shape)])
-            a_pos = index_to_position(a_index[:len(a_shape)], a_strides)
-            b_pos = index_to_position(b_index[:len(b_shape)], b_strides)
-            out_pos = index_to_position(out_index[:len(out_shape)], out_strides)
+            a_pos = index_to_position(a_index, a_strides)
+            b_pos = index_to_position(b_index, b_strides)
+            out_pos = index_to_position(out_index, out_strides)
             out[out_pos] = fn(a_storage[a_pos], b_storage[b_pos])
 
     return cuda.jit()(_zip)  # type: ignore
@@ -301,10 +301,10 @@ def tensor_reduce(
         # TODO: Implement for Task 3.3.
         max_pos_per_block = min(BLOCK_DIM, a_shape[reduce_dim])
         if pos < max_pos_per_block:
-            to_index(out_pos, out_shape, out_index[:len(out_shape)])
-            out_pos_idx = index_to_position(out_index[:len(a_shape)], out_strides)
+            to_index(out_pos, out_shape, out_index)
+            out_pos_idx = index_to_position(out_index, out_strides)
             out_index[reduce_dim] = pos
-            a_pos_idx = index_to_position(out_index[:len(out_shape)], a_strides)
+            a_pos_idx = index_to_position(out_index, a_strides)
             cache[pos] = a_storage[a_pos_idx]
         cuda.syncthreads()
         if pos == 0:
