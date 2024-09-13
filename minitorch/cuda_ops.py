@@ -443,9 +443,13 @@ def _tensor_matrix_multiply(
         if yidx < out_shape[1] and a_xidx < a_shape[2]:
             a_idx = index_to_position((batch, yidx, a_xidx), a_strides)
             a_shared[pj, pi] = a_storage[a_idx]
+        else:
+            a_shared[pj, pi] = 0.0
         if b_yidx < b_shape[1] and xidx < out_shape[2]:
             b_idx = index_to_position((batch, b_yidx, xidx), b_strides)
             b_shared[pj, pi] = b_storage[b_idx]
+        else:
+            b_shared[pj, pi] = 0.0
         cuda.syncthreads()
         # compute
         if yidx < out_shape[1] and xidx < out_shape[2]:
