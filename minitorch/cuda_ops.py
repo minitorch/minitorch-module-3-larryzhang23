@@ -451,6 +451,7 @@ def _tensor_matrix_multiply(
             for loop_idx in range(a_shape[2]):
                 sums += a_shared[yidx, loop_idx] * b_shared[loop_idx, xidx]
         cuda.syncthreads()
+    cuda.syncthreads()
     if yidx < out_shape[1] and xidx < out_shape[2]:
         out_pos = index_to_position((batch, yidx, xidx), out_strides)
         out[out_pos] = sums 
