@@ -381,7 +381,7 @@ def test_bmm(backend: str, data: DataObject) -> None:
 
 
 @pytest.mark.task3_4
-def test_mul_practice4() -> None:
+def test_mul_mine() -> None:
     "Extend to require 2 blocks"
     size = 33
     x1 = [[i for i in range(size)] for j in range(size)]
