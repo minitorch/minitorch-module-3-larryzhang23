@@ -1,7 +1,7 @@
 from typing import Callable, Optional
 
 import numba
-from numba import cuda
+from numba import cuda, int64
 
 from .tensor import Tensor
 from .tensor_data import (
@@ -413,7 +413,7 @@ def _tensor_matrix_multiply(
     a_batch_stride = a_strides[0] if a_shape[0] > 1 else 0
     b_batch_stride = b_strides[0] if b_shape[0] > 1 else 0
     # Batch dimension - fixed
-    batch = cuda.blockIdx.z
+    batch = int64(cuda.blockIdx.z)
 
     BLOCK_DIM = 32
     a_shared = cuda.shared.array((BLOCK_DIM, BLOCK_DIM), numba.float64)
@@ -436,7 +436,6 @@ def _tensor_matrix_multiply(
     # move to shared memory
     out_loops = (a_shape[2] + (BLOCK_DIM - 1)) // BLOCK_DIM
     sums = 0
-    batch = int(batch)
     for out_loop_idx in range(out_loops):
         map_a_idx = out_loop_idx * BLOCK_DIM + yidx
         map_b_idx = out_loop_idx * BLOCK_DIM + xidx
