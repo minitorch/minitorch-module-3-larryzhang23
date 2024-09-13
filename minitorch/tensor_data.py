@@ -43,7 +43,14 @@ def index_to_position(index: Index, strides: Strides) -> int:
         Position in storage
     """
 
-    raise NotImplementedError("Need to include this file from past assignment.")
+    # TODO: Implement for Task 2.1.
+    # return sum([i * j for i, j in zip(index, strides)])
+    
+    # To allow it in cuda for task 3.3
+    sums = 0
+    for i in range(len(strides)):
+        sums += index[i] * strides[i]
+    return sums
 
 
 def to_index(ordinal: int, shape: Shape, out_index: OutIndex) -> None:
@@ -59,7 +66,22 @@ def to_index(ordinal: int, shape: Shape, out_index: OutIndex) -> None:
         out_index : return index corresponding to position.
 
     """
-    raise NotImplementedError("Need to include this file from past assignment.")
+    # TODO: Implement for Task 2.1.
+    alpha = 1
+    # fix1 for task 3.2: Don't use list to add items dynamically because it is not supported by numba
+    # fix2 for task 3.3: Avoid extra memory allocation
+   
+    for i in range(len(shape) - 1, -1, -1):
+        out_index[i] = alpha 
+        alpha *= shape[i]
+
+    # Make sure to assign new variable because the function is made inline.
+    new_ordinal = ordinal
+    for i in range(len(shape)):
+        stride_val = out_index[i]
+        idx_val = new_ordinal // stride_val
+        out_index[i] = idx_val
+        new_ordinal %= stride_val
 
 
 def broadcast_index(
@@ -81,7 +103,27 @@ def broadcast_index(
     Returns:
         None
     """
-    raise NotImplementedError("Need to include this file from past assignment.")
+    # TODO: Implement for Task 2.2.
+    ################################################################################################################
+    # This function is used to help implement the tensor_map function for the case that the given input tensor has smaller shape than the output tensor's
+    # When we loop over the output tensor, use the function to map the index back to input to get the value.
+    ################################################################################################################
+    # if there is more dimensions in big_index on the left, abandoned by using -len(shape):
+    # for i, (idx, shape_val) in enumerate(zip(big_index[-len(shape):], shape)):
+    #     # if the ith dimension of shape is 1, the index has to be 0 whether the big_index is 0 or not and no matter what ith dimension of the big_shape is
+    #     if shape_val == 1:
+    #         out_index[i] = 0 
+    #     else:
+    #         out_index[i] = idx
+
+    # To let cuda work
+    valid_index = big_index[-len(shape):]
+    for i, shape_val in enumerate(shape):
+        # if the ith dimension of shape is 1, the index has to be 0 whether the big_index is 0 or not and no matter what ith dimension of the big_shape is
+        if shape_val == 1:
+            out_index[i] = 0 
+        else:
+            out_index[i] = valid_index[i]
 
 
 def shape_broadcast(shape1: UserShape, shape2: UserShape) -> UserShape:
@@ -98,7 +140,17 @@ def shape_broadcast(shape1: UserShape, shape2: UserShape) -> UserShape:
     Raises:
         IndexingError : if cannot broadcast
     """
-    raise NotImplementedError("Need to include this file from past assignment.")
+    # TODO: Implement for Task 2.2.
+    max_dim = max(len(shape1), len(shape2))
+    shape1 = tuple([1] * (max_dim - len(shape1))) + shape1
+    shape2 = tuple([1] * (max_dim - len(shape2))) + shape2
+    new_shape = []
+    for i, j in zip(shape1, shape2):
+        if i == j or min(i, j) == 1:
+            new_shape.append(max(i, j))
+        else:
+            raise IndexingError
+    return tuple(new_shape)
 
 
 def strides_from_shape(shape: UserShape) -> UserStrides:
@@ -209,7 +261,7 @@ class TensorData:
         Permute the dimensions of the tensor.
 
         Args:
-            *order: a permutation of the dimensions
+            order (list): a permutation of the dimensions
 
         Returns:
             New `TensorData` with the same storage and a new dimension order.
@@ -218,7 +270,13 @@ class TensorData:
             range(len(self.shape))
         ), f"Must give a position to each dimension. Shape: {self.shape} Order: {order}"
 
-        raise NotImplementedError("Need to include this file from past assignment.")
+        # TODO: Implement for Task 2.1.
+        new_shape = []
+        new_strides = []
+        for i in order:
+            new_shape.append(self.shape[i])
+            new_strides.append(self.strides[i])
+        return TensorData(self._storage, tuple(new_shape), tuple(new_strides))
 
     def to_string(self) -> str:
         s = ""

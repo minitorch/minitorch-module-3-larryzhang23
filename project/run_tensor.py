@@ -21,18 +21,27 @@ class Network(minitorch.Module):
         self.layer3 = Linear(hidden_layers, 1)
 
     def forward(self, x):
-        raise NotImplementedError("Need to include this file from past assignment.")
+        # TODO: Implement for Task 2.5.
+        x = self.layer1(x).relu()
+        x = self.layer2(x).relu()
+        return self.layer3(x).sigmoid()
 
 
 class Linear(minitorch.Module):
     def __init__(self, in_size, out_size):
         super().__init__()
         self.weights = RParam(in_size, out_size)
-        self.bias = RParam(out_size)
+        s = minitorch.zeros((out_size,))
+        s = s + 0.1
+        self.bias = minitorch.Parameter(s)
         self.out_size = out_size
 
     def forward(self, x):
-        raise NotImplementedError("Need to include this file from past assignment.")
+        # TODO: Implement for Task 2.5.
+        B, c = x.shape
+        x = x.view(B, c, 1)
+        out = (self.weights.value * x).sum(dim=1).view(B, self.out_size) + self.bias.value
+        return out
 
 
 def default_log_fn(epoch, total_loss, correct, losses):
@@ -71,10 +80,11 @@ class TensorTrain:
             prob = (out * y) + (out - 1.0) * (y - 1.0)
 
             loss = -prob.log()
-            (loss / data.N).sum().view(1).backward()
-            total_loss = loss.sum().view(1)[0]
+            (loss / data.N).sum().backward()
+            total_loss = loss.sum().item()
             losses.append(total_loss)
-
+            # print([g.value.grad for g in optim.parameters])
+            # import pdb; pdb.set_trace()
             # Update
             optim.step()
 
@@ -87,7 +97,7 @@ class TensorTrain:
 
 if __name__ == "__main__":
     PTS = 50
-    HIDDEN = 2
-    RATE = 0.5
+    HIDDEN = 100
+    RATE = 0.05
     data = minitorch.datasets["Simple"](PTS)
     TensorTrain(HIDDEN).train(data, RATE)

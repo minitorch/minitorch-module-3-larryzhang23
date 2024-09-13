@@ -3,7 +3,7 @@ from typing import Callable, Dict, Iterable, List, Tuple
 
 import numba
 import pytest
-from hypothesis import given, settings
+from hypothesis import given, settings, HealthCheck
 from hypothesis.strategies import DataObject, data, integers, lists, permutations
 
 import minitorch
@@ -182,6 +182,7 @@ if numba.cuda.is_available():
         s = b.sum(1)
         b2 = minitorch.tensor(x, backend=shared["cuda"])
         out = b2.sum(1)
+        print(s, out, b2)
         for i in range(16):
             assert_close(s[i, 0], out[i, 0])
 
@@ -305,7 +306,7 @@ if numba.cuda.is_available():
 
 
 @given(data())
-@settings(max_examples=25)
+@settings(max_examples=25, suppress_health_check=[HealthCheck.data_too_large])
 @pytest.mark.parametrize("fn", two_arg)
 @pytest.mark.parametrize("backend", backend_tests)
 def test_two_grad_broadcast(
@@ -340,8 +341,8 @@ def test_permute(backend: str, data: DataObject) -> None:
 
 @pytest.mark.task3_2
 def test_mm2() -> None:
-    a = minitorch.rand((2, 3), backend=FastTensorBackend)
-    b = minitorch.rand((3, 4), backend=FastTensorBackend)
+    a = minitorch.rand((2, 3), backend=shared["fast"])
+    b = minitorch.rand((3, 4), backend=shared["fast"])
     c = a @ b
 
     c2 = (a.view(2, 3, 1) * b.view(1, 3, 4)).sum(1).view(2, 4)
@@ -377,3 +378,23 @@ def test_bmm(backend: str, data: DataObject) -> None:
         .view(D, A, C)
     )
     assert_close_tensor(c, c2)
+
+
+@pytest.mark.task3_4
+def test_mul_mine() -> None:
+    "Extend to require 2 blocks"
+    size = 33
+    x1 = [[i for i in range(size)] for j in range(size)]
+    y1 = [[i for i in range(size)] for j in range(size)]
+    z = minitorch.tensor(x1, backend=shared["fast"]) @ minitorch.tensor(
+        y1, backend=shared["fast"]
+    )
+
+    x = minitorch.tensor(x1, backend=shared["cuda"])
+    y = minitorch.tensor(y1, backend=shared["cuda"])
+    z2 = x @ y
+
+    print(z, z2)
+    for i in range(size):
+        for j in range(size):
+            assert_close(z[i, j], z2[i, j])
