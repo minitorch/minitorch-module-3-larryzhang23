@@ -378,3 +378,23 @@ def test_bmm(backend: str, data: DataObject) -> None:
         .view(D, A, C)
     )
     assert_close_tensor(c, c2)
+
+
+@pytest.mark.task3_4
+def test_mul_practice4() -> None:
+    "Extend to require 2 blocks"
+    size = 33
+    x1 = [[i for i in range(size)] for j in range(size)]
+    y1 = [[i for i in range(size)] for j in range(size)]
+    z = minitorch.tensor(x1, backend=shared["fast"]) @ minitorch.tensor(
+        y1, backend=shared["fast"]
+    )
+
+    x = minitorch.tensor(x1, backend=shared["cuda"])
+    y = minitorch.tensor(y1, backend=shared["cuda"])
+    z2 = x @ y
+
+    print(z, z2)
+    for i in range(size):
+        for j in range(size):
+            assert_close(z[i, j], z2[i, j])
