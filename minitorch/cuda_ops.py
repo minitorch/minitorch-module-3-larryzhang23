@@ -449,7 +449,7 @@ def _tensor_matrix_multiply(
         # compute
         if yidx < out_shape[1] and xidx < out_shape[2]:
             for loop_idx in range(a_shape[2]):
-                sums += a_shared[yidx, loop_idx] * b_shared[loop_idx, xidx]
+                sums += a_shared[pj, loop_idx] * b_shared[loop_idx, pi]
         cuda.syncthreads()
     cuda.syncthreads()
     if yidx < out_shape[1] and xidx < out_shape[2]:
