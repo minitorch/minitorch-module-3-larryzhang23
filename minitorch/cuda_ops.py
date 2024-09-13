@@ -436,6 +436,7 @@ def _tensor_matrix_multiply(
     # move to shared memory
     out_loops = (a_shape[2] + (BLOCK_DIM - 1)) // BLOCK_DIM
     sums = 0
+    batch = int(batch)
     for out_loop_idx in range(out_loops):
         map_a_idx = out_loop_idx * BLOCK_DIM + yidx
         map_b_idx = out_loop_idx * BLOCK_DIM + xidx
