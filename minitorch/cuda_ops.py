@@ -437,22 +437,22 @@ def _tensor_matrix_multiply(
     out_loops = (a_shape[2] + (BLOCK_DIM - 1)) // BLOCK_DIM
     sums = 0
     for out_loop_idx in range(out_loops):
-        map_a_idx = out_loop_idx * BLOCK_DIM + yidx
-        map_b_idx = out_loop_idx * BLOCK_DIM + xidx
-        if xidx < out_shape[1] and map_a_idx < a_shape[2]:
-            a_idx = index_to_position((batch, xidx, map_a_idx), a_strides)
+        a_xidx = out_loop_idx * BLOCK_DIM + xidx
+        b_yidx = out_loop_idx * BLOCK_DIM + yidx
+        if yidx < out_shape[1] and a_xidx < a_shape[2]:
+            a_idx = index_to_position((batch, yidx, a_xidx), a_strides)
             a_shared[pi, pj] = a_storage[a_idx]
-        if map_b_idx < b_shape[1] and yidx < out_shape[2]:
-            b_idx = index_to_position((batch, map_b_idx, yidx), b_strides)
+        if b_yidx < b_shape[1] and xidx < out_shape[2]:
+            b_idx = index_to_position((batch, b_yidx, xidx), b_strides)
             b_shared[pi, pj] = b_storage[b_idx]
         cuda.syncthreads()
         # compute
-        if xidx < out_shape[1] and yidx < out_shape[2]:
+        if yidx < out_shape[1] and xidx < out_shape[2]:
             for loop_idx in range(a_shape[2]):
-                sums += a_shared[xidx, loop_idx] * b_shared[loop_idx, yidx]
+                sums += a_shared[yidx, loop_idx] * b_shared[loop_idx, xidx]
         cuda.syncthreads()
-    if xidx < out_shape[1] and yidx < out_shape[2]:
-        out_pos = index_to_position((batch, xidx, yidx), out_strides)
+    if yidx < out_shape[1] and xidx < out_shape[2]:
+        out_pos = index_to_position((batch, yidx, xidx), out_strides)
         out[out_pos] = sums 
     
 
