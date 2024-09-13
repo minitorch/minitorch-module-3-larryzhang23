@@ -1,9 +1,14 @@
 import timeit 
+import warnings
+
 import numba
+from numba.core.errors import NumbaPerformanceWarning
 
 import minitorch
 from run_fast_tensor import datasets, FastTensorBackend, FastTrain
 
+# Suppress Numba performance warnings
+warnings.simplefilter("ignore", NumbaPerformanceWarning)
 if numba.cuda.is_available():
     GPUBackend = minitorch.TensorBackend(minitorch.CudaOps)
 
