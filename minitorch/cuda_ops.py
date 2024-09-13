@@ -354,14 +354,14 @@ def _mm_practice(out: Storage, a: Storage, b: Storage, size: int) -> None:
     xidx = cuda.threadIdx.x
     yidx = cuda.threadIdx.y 
     if xidx < size and yidx < size:
-        a_shared[yidx, xidx] = a[yidx, xidx]
-        b_shared[yidx, xidx] = b[yidx, xidx]
+        a_shared[yidx][xidx] = a[yidx][xidx]
+        b_shared[yidx][xidx] = b[yidx][xidx]
     cuda.syncthreads()
     # compute 
     if xidx < size and yidx < size:
         sums = 0
         for i in range(size):
-            sums += a_shared[i, xidx] * b_shared[yidx, i]
+            sums += a_shared[i][xidx] * b_shared[yidx][i]
         out_pos = yidx * size + xidx
         out[out_pos] = sums
     
@@ -440,14 +440,14 @@ def _tensor_matrix_multiply(
         map_a_idx = out_loop_idx * BLOCK_DIM + yidx
         map_b_idx = out_loop_idx * BLOCK_DIM + xidx
         if xidx < out_shape[1] and map_a_idx < a_shape[2]:
-            a_shared[pi, pj] = a_storage[batch, xidx, map_a_idx]
+            a_shared[pi][pj] = a_storage[batch][xidx][map_a_idx]
         if map_b_idx < b_shape[1] and yidx < out_shape[2]:
-            b_shared[pi, pj] = b_storage[batch, map_b_idx, yidx]
+            b_shared[pi][pj] = b_storage[batch][map_b_idx][yidx]
         cuda.syncthreads()
         # compute
         if xidx < out_shape[1] and yidx < out_shape[2]:
             for loop_idx in range(a_shape[2]):
-                sums += a_shared[xidx, loop_idx] * b_shared[loop_idx, yidx]
+                sums += a_shared[xidx][loop_idx] * b_shared[loop_idx][yidx]
         cuda.syncthreads()
     if xidx < out_shape[1] and yidx < out_shape[2]:
         out_pos = index_to_position((batch, xidx, yidx), out_strides)
